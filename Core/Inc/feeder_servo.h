@@ -3,8 +3,9 @@
 
 #include "main.h"
 
-#define FEEDER_SERVO_CLOSED_US 1000U
-#define FEEDER_SERVO_OPEN_US   2000U
+#define FEEDER_SERVO_CLOSED_US 550U
+#define FEEDER_SERVO_OPEN_US   1450U
+#define FEEDER_SERVO_HALF_US   ((FEEDER_SERVO_CLOSED_US + FEEDER_SERVO_OPEN_US) / 2U)
 
 void FeederServo_MoveTo(uint16_t pulse_us, uint32_t settle_ms);
 

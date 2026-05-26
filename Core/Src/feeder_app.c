@@ -24,6 +24,7 @@ static volatile uint8_t feed_due;
 static volatile uint8_t reload_button_due;
 static volatile uint8_t ble_sleep_requested;
 static uint8_t reload_hatch_open;
+static uint8_t reload_close_step;
 static GPIO_PinState reload_switch_state;
 static uint32_t reload_switch_pressed_since_ms;
 static uint8_t ble_setup_edge_count;
@@ -38,6 +39,7 @@ static void Feeder_PrintBleCpu2Diag(void);
 static uint8_t Feeder_ServiceReloadSwitch(void);
 static uint8_t Feeder_BleSetupModeActive(void);
 static void Feeder_RunCycle(void);
+static void Feeder_ReloadCloseStep(void);
 static void Feeder_RecordReloadSwitchEdge(void);
 static void Feeder_StartBleSetup(void);
 static uint8_t Feeder_ConsumeBleSleepResetMarker(void);
@@ -52,6 +54,7 @@ void FeederApp_Init(uint8_t hse_ready)
     FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
   }
   reload_hatch_open = 0U;
+  reload_close_step = 0U;
   reload_switch_state = HAL_GPIO_ReadPin(RELOAD_BUTTON_GPIO_Port, RELOAD_BUTTON_Pin);
   reload_switch_pressed_since_ms = 0U;
 
@@ -222,18 +225,19 @@ static uint8_t Feeder_ServiceReloadSwitch(void)
       {
         FeederServo_MoveTo(FEEDER_SERVO_OPEN_US, HATCH_CLOSE_SETTLE_MS);
         reload_hatch_open = 1U;
+        reload_close_step = 0U;
+        return 1U;
+      }
+
+      if ((switch_state == GPIO_PIN_RESET) && (reload_hatch_open != 0U))
+      {
+        Feeder_ReloadCloseStep();
         return 1U;
       }
     }
     else
     {
       reload_switch_pressed_since_ms = 0U;
-      if (reload_hatch_open != 0U)
-      {
-        FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
-        reload_hatch_open = 0U;
-        return 1U;
-      }
     }
   }
 
@@ -245,11 +249,35 @@ static uint8_t Feeder_ServiceReloadSwitch(void)
     {
       FeederServo_MoveTo(FEEDER_SERVO_OPEN_US, HATCH_CLOSE_SETTLE_MS);
       reload_hatch_open = 1U;
+      reload_close_step = 0U;
       return 1U;
     }
   }
 
   return 0U;
+}
+
+static void Feeder_ReloadCloseStep(void)
+{
+  reload_switch_pressed_since_ms = 0U;
+
+  if (reload_close_step == 0U)
+  {
+    printf("Reload close step 1/3: halfway closed\r\n");
+    FeederServo_MoveTo(FEEDER_SERVO_HALF_US, HATCH_CLOSE_SETTLE_MS);
+    reload_close_step = 1U;
+    return;
+  }
+
+  printf("Reload close step %u/3: closed\r\n", (unsigned int)(reload_close_step + 1U));
+  FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
+
+  reload_close_step++;
+  if (reload_close_step >= 3U)
+  {
+    reload_close_step = 0U;
+    reload_hatch_open = 0U;
+  }
 }
 
 static void Feeder_RecordReloadSwitchEdge(void)
@@ -316,4 +344,5 @@ static void Feeder_RunCycle(void)
   FeederServo_MoveTo(FEEDER_SERVO_OPEN_US, HATCH_OPEN_TIME_MS);
   FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
   reload_hatch_open = 0U;
+  reload_close_step = 0U;
 }
