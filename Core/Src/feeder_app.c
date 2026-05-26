@@ -236,15 +236,17 @@ static void Feeder_ReloadCloseStep(void)
     return;
   }
 
-  printf("Reload close step %u/3: closed\r\n", (unsigned int)(reload_close_step + 1U));
-  FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
-
-  reload_close_step++;
-  if (reload_close_step >= 3U)
+  if (reload_close_step == 1U)
   {
-    reload_close_step = 0U;
-    reload_hatch_open = 0U;
+    printf("Reload close step 2/3: closed\r\n");
+    FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
+    reload_close_step = 2U;
+    return;
   }
+
+  printf("Reload close step 3/3: finished\r\n");
+  reload_close_step = 0U;
+  reload_hatch_open = 0U;
 }
 
 static void Feeder_RecordReloadSwitchEdge(void)
