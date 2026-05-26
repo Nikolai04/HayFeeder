@@ -8,7 +8,6 @@
 #define HATCH_OPEN_TIME_MS          100U
 #define HATCH_CLOSE_SETTLE_MS       200U
 #define RELOAD_BUTTON_DEBOUNCE_MS   30U
-#define RELOAD_OPEN_HOLD_MS         100U
 #define BLE_SETUP_SEQUENCE_MS       10000U
 #define BLE_SETUP_ACTIVE_MS         600000U
 #define BLE_SETUP_EDGE_COUNT        4U
@@ -26,7 +25,6 @@ static volatile uint8_t ble_sleep_requested;
 static uint8_t reload_hatch_open;
 static uint8_t reload_close_step;
 static GPIO_PinState reload_switch_state;
-static uint32_t reload_switch_pressed_since_ms;
 static uint8_t ble_setup_edge_count;
 static uint8_t ble_started;
 static uint8_t ble_wait_reported;
@@ -56,7 +54,6 @@ void FeederApp_Init(uint8_t hse_ready)
   reload_hatch_open = 0U;
   reload_close_step = 0U;
   reload_switch_state = HAL_GPIO_ReadPin(RELOAD_BUTTON_GPIO_Port, RELOAD_BUTTON_Pin);
-  reload_switch_pressed_since_ms = 0U;
 
   FeederSchedule_SetNextAlarm();
   FeederSchedule_PrintCurrentTime("Startup");
@@ -204,54 +201,26 @@ static void Feeder_PrintBleCpu2Diag(void)
 static uint8_t Feeder_ServiceReloadSwitch(void)
 {
   GPIO_PinState switch_state;
-  uint32_t now;
 
   HAL_Delay(RELOAD_BUTTON_DEBOUNCE_MS);
   switch_state = HAL_GPIO_ReadPin(RELOAD_BUTTON_GPIO_Port, RELOAD_BUTTON_Pin);
-  now = HAL_GetTick();
 
   if (switch_state != reload_switch_state)
   {
     reload_switch_state = switch_state;
     Feeder_RecordReloadSwitchEdge();
 
-    if (switch_state == GPIO_PIN_RESET)
+    if (reload_hatch_open == 0U)
     {
-      reload_switch_pressed_since_ms = now;
-      HAL_Delay(RELOAD_OPEN_HOLD_MS);
-      switch_state = HAL_GPIO_ReadPin(RELOAD_BUTTON_GPIO_Port, RELOAD_BUTTON_Pin);
-      now = HAL_GetTick();
-      if ((switch_state == GPIO_PIN_RESET) && (reload_hatch_open == 0U))
-      {
-        FeederServo_MoveTo(FEEDER_SERVO_OPEN_US, HATCH_CLOSE_SETTLE_MS);
-        reload_hatch_open = 1U;
-        reload_close_step = 0U;
-        return 1U;
-      }
-
-      if ((switch_state == GPIO_PIN_RESET) && (reload_hatch_open != 0U))
-      {
-        Feeder_ReloadCloseStep();
-        return 1U;
-      }
-    }
-    else
-    {
-      reload_switch_pressed_since_ms = 0U;
-    }
-  }
-
-  if (switch_state == GPIO_PIN_RESET)
-  {
-    if ((reload_hatch_open == 0U) &&
-        (reload_switch_pressed_since_ms != 0U) &&
-        ((now - reload_switch_pressed_since_ms) >= RELOAD_OPEN_HOLD_MS))
-    {
+      printf("Reload switch toggled: opening hatch\r\n");
       FeederServo_MoveTo(FEEDER_SERVO_OPEN_US, HATCH_CLOSE_SETTLE_MS);
       reload_hatch_open = 1U;
       reload_close_step = 0U;
       return 1U;
     }
+
+    Feeder_ReloadCloseStep();
+    return 1U;
   }
 
   return 0U;
@@ -259,8 +228,6 @@ static uint8_t Feeder_ServiceReloadSwitch(void)
 
 static void Feeder_ReloadCloseStep(void)
 {
-  reload_switch_pressed_since_ms = 0U;
-
   if (reload_close_step == 0U)
   {
     printf("Reload close step 1/3: halfway closed\r\n");
