@@ -5,10 +5,10 @@
 #include "feeder_servo.h"
 #include <stdio.h>
 
-#define HATCH_OPEN_TIME_MS          5000U
+#define HATCH_OPEN_TIME_MS          100U
 #define HATCH_CLOSE_SETTLE_MS       200U
 #define RELOAD_BUTTON_DEBOUNCE_MS   30U
-#define RELOAD_OPEN_HOLD_MS         1000U
+#define RELOAD_OPEN_HOLD_MS         100U
 #define BLE_SETUP_SEQUENCE_MS       10000U
 #define BLE_SETUP_ACTIVE_MS         600000U
 #define BLE_SETUP_EDGE_COUNT        4U
@@ -215,6 +215,15 @@ static uint8_t Feeder_ServiceReloadSwitch(void)
     if (switch_state == GPIO_PIN_RESET)
     {
       reload_switch_pressed_since_ms = now;
+      HAL_Delay(RELOAD_OPEN_HOLD_MS);
+      switch_state = HAL_GPIO_ReadPin(RELOAD_BUTTON_GPIO_Port, RELOAD_BUTTON_Pin);
+      now = HAL_GetTick();
+      if ((switch_state == GPIO_PIN_RESET) && (reload_hatch_open == 0U))
+      {
+        FeederServo_MoveTo(FEEDER_SERVO_OPEN_US, HATCH_CLOSE_SETTLE_MS);
+        reload_hatch_open = 1U;
+        return 1U;
+      }
     }
     else
     {

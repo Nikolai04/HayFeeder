@@ -28,7 +28,7 @@ The reload holding switch controls the hatch manually:
 - Release/open the switch to close.
 - Both switch edges wake the MCU from STOP2.
 - Quick open/close twice within 10 seconds enables BLE setup mode for 10 minutes.
-- The hatch only opens when the switch is held closed for about 1 second, so quick BLE setup clicks do not move the servo.
+- The hatch opens when the switch is held closed for about 100 ms, so switch bounce does not move the servo.
 
 At startup it drives the servo to the closed position, then stops TIM2 PWM.
 
@@ -98,7 +98,7 @@ Example:
 ```text
 Startup RTC 12:00:00
 Reload switch: quick open/close twice within 10s enables BLE setup
-Reload switch: hold closed for 1s to open hatch, release to close
+Reload switch: hold closed briefly to open hatch, release to close
 BLE is off until setup mode is enabled
 Next feed set to 14:00
 Sleep: waiting for feed alarm or reload switch
