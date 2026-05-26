@@ -6,6 +6,7 @@ Low-power hay feeder controller for STM32CubeIDE.
 
 - MCU: STM32WB55CGU6, UFQFPN48
 - Servo PWM: PA0 / TIM2_CH1
+- Servo power relay/module enable: PA2, active high
 - Reload holding switch: PA1 / EXTI1, switch to GND, internal pull-up enabled
 - Serial console: USART1 on PB6 TX / PB7 RX, 115200 8N1
 - RTC clock: LSE 32.768 kHz crystal on PC14 / PC15
@@ -47,10 +48,11 @@ The firmware is set up for low power:
 - CPU sleeps in STOP2 between RTC alarms.
 - SysTick is suspended while sleeping.
 - Clocks are restored after wakeup.
+- PA2 powers the servo relay/module only while moving the servo.
 - TIM2 only runs while moving the servo.
 - PA1 is kept as the wake-capable reload switch.
 - USART1 is enabled for serial time prints.
-- Unused PA2, PB8, and PB9 are configured as analog inputs.
+- Unused PB8 and PB9 are configured as analog inputs.
 
 Important: the MCU can sleep, but a powered servo can still draw current. For a battery feeder, power the servo through a MOSFET or load switch and only enable servo power during the feed cycle.
 
@@ -61,12 +63,25 @@ Servo pulse widths are defined in `Core/Inc/feeder_servo.h`, and the movement ti
 ```c
 #define FEEDER_SERVO_CLOSED_US      1000U
 #define FEEDER_SERVO_OPEN_US        2000U
+#define SERVO_POWER_SETTLE_MS       300U
 #define HATCH_OPEN_TIME_MS          5000U
 #define HATCH_CLOSE_SETTLE_MS       200U
 #define RELOAD_BUTTON_DEBOUNCE_MS   30U
 ```
 
 Change `FEEDER_SERVO_CLOSED_US` and `FEEDER_SERVO_OPEN_US` if the hatch moves the wrong direction or needs different travel.
+
+For a KY-019 relay module:
+
+```text
+KY-019 VCC -> 5V
+KY-019 GND -> common GND
+KY-019 S   -> PA2 / SERVO_POWER_EN
+Relay COM  -> 5V servo supply
+Relay NO   -> servo red wire
+Servo GND  -> common GND
+Servo PWM  -> PA0 / TIM2_CH1
+```
 
 ## Serial Console
 

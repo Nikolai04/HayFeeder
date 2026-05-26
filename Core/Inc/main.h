@@ -62,6 +62,8 @@ void Error_Handler(void);
 #define RELOAD_BUTTON_Pin GPIO_PIN_1
 #define RELOAD_BUTTON_GPIO_Port GPIOA
 #define RELOAD_BUTTON_EXTI_IRQn EXTI1_IRQn
+#define SERVO_POWER_EN_Pin GPIO_PIN_2
+#define SERVO_POWER_EN_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
