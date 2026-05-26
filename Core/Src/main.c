@@ -60,8 +60,6 @@ static void MX_TIM2_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void FeederSerial_PrepareStop(void);
-void FeederSerial_RestoreAfterStop(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -505,25 +503,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void FeederSerial_PrepareStop(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  (void)HAL_UART_Abort(&huart1);
-  (void)HAL_UART_DeInit(&huart1);
-
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-}
-
-void FeederSerial_RestoreAfterStop(void)
-{
-  MX_USART1_UART_Init();
-}
-
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *rtc)
 {
   FeederApp_OnFeedAlarm(rtc);

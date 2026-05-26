@@ -18,8 +18,6 @@ extern RTC_HandleTypeDef hrtc;
 
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
-void FeederSerial_PrepareStop(void);
-void FeederSerial_RestoreAfterStop(void);
 
 static volatile uint8_t feed_due;
 static volatile uint8_t reload_button_due;
@@ -147,14 +145,12 @@ void FeederApp_RequestBleSleep(void)
 static void Feeder_EnterStopUntilAlarm(void)
 {
   printf("Sleep: waiting for feed alarm or reload switch\r\n");
-  FeederSerial_PrepareStop();
   HAL_SuspendTick();
   HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
   HAL_ResumeTick();
 
   SystemClock_Config();
   PeriphCommonClock_Config();
-  FeederSerial_RestoreAfterStop();
   FeederSchedule_PrintCurrentTime("VAKNE");
 }
 
