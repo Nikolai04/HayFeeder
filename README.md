@@ -63,7 +63,7 @@ Servo pulse widths are defined in `Core/Inc/feeder_servo.h`, and the movement ti
 ```c
 #define FEEDER_SERVO_CLOSED_US      1000U
 #define FEEDER_SERVO_OPEN_US        2000U
-#define SERVO_POWER_SETTLE_MS       300U
+#define SERVO_POWER_SETTLE_MS       50U
 #define SERVO_POWER_OFF_DELAY_MS    300U
 #define HATCH_OPEN_TIME_MS          5000U
 #define HATCH_CLOSE_SETTLE_MS       200U

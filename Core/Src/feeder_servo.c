@@ -1,6 +1,6 @@
 #include "feeder_servo.h"
 
-#define SERVO_POWER_SETTLE_MS 300U
+#define SERVO_POWER_SETTLE_MS 50U
 #define SERVO_POWER_OFF_DELAY_MS 300U
 
 extern TIM_HandleTypeDef htim2;
