@@ -238,13 +238,13 @@ static void Feeder_ReloadCloseStep(void)
 
   if (reload_close_step == 1U)
   {
-    printf("Reload close step 2/3: closed\r\n");
-    FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
+    printf("Reload close step 2/3: no servo movement\r\n");
     reload_close_step = 2U;
     return;
   }
 
-  printf("Reload close step 3/3: finished\r\n");
+  printf("Reload close step 3/3: closed\r\n");
+  FeederServo_MoveTo(FEEDER_SERVO_CLOSED_US, HATCH_CLOSE_SETTLE_MS);
   reload_close_step = 0U;
   reload_hatch_open = 0U;
 }
