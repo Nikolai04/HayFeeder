@@ -1,6 +1,7 @@
 #include "feeder_servo.h"
 
 #define SERVO_POWER_SETTLE_MS 300U
+#define SERVO_POWER_OFF_DELAY_MS 300U
 
 extern TIM_HandleTypeDef htim2;
 
@@ -26,6 +27,7 @@ void FeederServo_MoveTo(uint16_t pulse_us, uint32_t settle_ms)
   }
 
   HAL_Delay(settle_ms);
+  HAL_Delay(SERVO_POWER_OFF_DELAY_MS);
   HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
   FeederServo_SetPower(GPIO_PIN_RESET);
 }
